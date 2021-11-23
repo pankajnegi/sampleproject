@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<APIProxy revision="1" name="User Profile">
+    <ConfigurationVersion majorVersion="4" minorVersion="0" />
+    <Description>User Profile</Description>
+    <Policies>
+        <!-- Values will be populated by deployment script -->
+    </Policies>
+    <ProxyEndpoints>
+        <ProxyEndpoint>User Profile</ProxyEndpoint>
+    </ProxyEndpoints>
+    <Resources>
+        <!-- Values will be populated by deployment script -->
+    </Resources>
+    <TargetServers/>
+    <TargetEndpoints>
+        <!-- Values will be populated by deployment script -->
+            <TargetEndpoint>User Profile</TargetEndpoint>
+            <TargetEndpoint>User Profile</TargetEndpoint>
+            <TargetEndpoint>User Profile</TargetEndpoint>
+            <TargetEndpoint>User Profile</TargetEndpoint>
+    </TargetEndpoints>
+    <validate>false</validate>
+</APIProxy>

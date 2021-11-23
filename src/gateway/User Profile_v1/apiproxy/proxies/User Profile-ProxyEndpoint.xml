@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<ProxyEndpoint name="User ProfileProxyEndpoint">
+    <Description>User Profile</Description>
+    <FaultRules>
+          <FaultRule name="SecurityFaultHandling">
+            <Step>
+                <Name>SF-SecurityFaultCallout</Name>
+            </Step>
+            <Condition>((oauthV2.VerifyAccessToken.failed equals true) or ((oauthV2.VerifyAPIKey.failed equals true) or (BasicAuthentication.DecodeBasicAuthentication.failed equals true) or (acl.AccessControl.failed equals true) or (oauthV2.failed equals true) or (authFlag equals false) or (isValidToken equals false)))</Condition>
+          </FaultRule>
+          <FaultRule name="TrafficManagementFaultHandling">
+            <Step>
+                <Name>SF-TrafficManagementFault</Name>
+            </Step>
+            <Condition>((ratelimit.SpikeArrest.failed equals true) or ((ratelimit.QuotaAtProductLevel.failed equals true)))</Condition>
+          </FaultRule>
+    </FaultRules>
+    <DefaultFaultRule name="All">
+        <AlwaysEnforce>true</AlwaysEnforce>
+        <Step>
+            <Name>SF-DefaultFaultCallout</Name>
+        </Step>
+    </DefaultFaultRule>
+    <PreFlow name="PreFlow">
+        <Request>
+            <Step>
+                <Name>cf-set-log-variables</Name>
+            </Step>
+            <Step>
+                <Name>SF-Log-Preflow-Request</Name>
+            </Step>
+            <Step>
+                <Condition>(log.proxyVerb != "OPTIONS")</Condition>
+                <Name>SF-Validate-Access-Token</Name>
+            </Step>
+        </Request>
+        <Response>
+        </Response>
+    </PreFlow>
+    <Flows>
+	    <Flow name="WrongAccept">
+            <Description/>
+            <Request>
+                <Step>
+                    <Name>SF-Proxy-Current-Flow-Name</Name>
+                </Step>
+                <Step>
+                    <Name>cf-Fault-Unsupported-AcceptType</Name>
+                </Step>
+            </Request>
+            <Response/>
+            <Condition>(log.proxyVerb != "OPTIONS") and (!(log.Accept JavaRegex "(text\/xml)(;.*)|(.*;)(text\/xml)(;.*)|text\/xml|(.*;)(text\/xml)|(application\/xml)(;.*)|(.*;)(application\/xml)(;.*)|application\/xml|(.*;)(application\/xml)|(application\/json)(;.*)|(.*;)(application\/json)(;.*)|application\/json|(.*;)(application\/json)"))</Condition>
+        </Flow>
+        <Flow name="WrongContentType">
+            <Description/>
+            <Request>
+                <Step>
+                    <Name>SF-Proxy-Current-Flow-Name</Name>
+                </Step>
+                <Step>
+                    <Name>cf-Fault-Unsupported-ContentType</Name>
+                </Step>
+            </Request>
+            <Response/>
+            <Condition>(log.proxyVerb != "OPTIONS") and ((!(request.content = "")) and (!(request.content is null)) and !(log.Content-Type JavaRegex "(text\/xml)(;.*)|(.*;)(text\/xml)(;.*)|text\/xml|(.*;)(text\/xml)|(application\/xml)(;.*)|(.*;)(application\/xml)(;.*)|application\/xml|(.*;)(application\/xml)|(application\/json)(;.*)|(.*;)(application\/json)(;.*)|application\/json|(.*;)(application\/json)"))</Condition>
+        </Flow>
+            <Flow name="echo">
+                <Request>
+                <Step>
+                    <Name>cf-Assign-Routing-Variables-echo</Name>
+                </Step>
+                </Request>
+                <Response/>
+                <Condition>(proxy.pathsuffix MatchesPath &quot;/Echo&quot;) and (request.verb= &quot;POST&quot;)</Condition>
+            </Flow>
+        <Flow name="unknown-resource">
+            <Request>
+                <Step>
+                    <Name>cf-Unknown-Resource</Name>
+                </Step>
+            </Request>
+            <Response/>
+        </Flow>
+    </Flows>
+    <PostFlow name="PostFlow">
+        <Request></Request>
+        <Response>
+            <Step>
+                <Name>SF-Log-Collector</Name>
+            </Step>
+        </Response>
+    </PostFlow>
+    <PostClientFlow>
+        <Response>
+        </Response>
+    </PostClientFlow>
+    <HTTPProxyConnection>
+        <BasePath>/v0/users</BasePath>
+            <VirtualHost>secure</VirtualHost>
+            <VirtualHost>default</VirtualHost>
+    </HTTPProxyConnection>
+        <RouteRule name="User Profile">
+            <Condition>(target.route.service = &quot;User Profile&quot;)</Condition>
+            <TargetEndpoint>User Profile</TargetEndpoint>
+        </RouteRule>
+</ProxyEndpoint>
